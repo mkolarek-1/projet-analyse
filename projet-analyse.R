@@ -45,4 +45,69 @@ get_gender = function(movies_link) {
 #création d'un data frame contenant le nom, la note, la date et le ou les genres du film
 
 movies = data.frame( name , notes , date , gender )
+# Interface Shiny
+ui <- fluidPage(
+  titlePanel("Moteur de recherche de films"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      # Entrée pour rechercher par genre
+      textInput("genre", "Rechercher par genre:", value = ""),
+      
+      # Sélectionner la note
+      sliderInput("note", "Sélectionner une note:",
+                  min = 0, max = 100, value = c(0, 100)),
+      
+      # Sélectionner l'année
+      sliderInput("year", "Sélectionner une année:",
+                  min = 1900, max = 2025, value = c(1900, 2025), step = 1)
+    ),
+    
+    mainPanel(
+      # Afficher les films correspondant aux critères de recherche
+      tableOutput("film_table")
+    )
+  )
+)
+
+# Serveur Shiny
+server <- function(input, output) {
+  
+  # Filtrer les films selon les critères
+  filtered_movies <- reactive({
+    
+    # Filtrer par genre seulement si le genre est spécifié
+    if (input$genre != "") {
+      filtered_genre <- movies %>%
+        filter(grepl(input$genre, gender, ignore.case = TRUE))
+    } else {
+      filtered_genre <- movies  # Si le genre n'est pas spécifié, prendre tous les films
+    }
+    
+    # Si un genre a été sélectionné, ne pas appliquer les filtres de note et d'année
+    if (input$genre != "") {
+      return(filtered_genre)  # Si un genre est donné, on ne filtre que par genre
+    }
+    
+    # Sinon, on applique aussi les filtres pour la note et l'année
+    filtered_note <- filtered_genre %>%
+      filter(as.numeric(notes) >= input$note[1] & as.numeric(notes) <= input$note[2])
+    
+    # Filtrer par année
+    filtered_year <- filtered_note %>%
+      filter(as.numeric(substring(date, 1, 4)) >= input$year[1] & as.numeric(substring(date, 1, 4)) <= input$year[2])
+    
+    return(filtered_year)
+  })
+  
+  # Afficher la table des films filtrés
+  output$film_table <- renderTable({
+    filtered_movies()
+  })
+}
+
+# Lancer l'application Shiny
+shinyApp(ui = ui, server = server)
+
+  
   
