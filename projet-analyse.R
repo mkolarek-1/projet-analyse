@@ -79,6 +79,79 @@ print(paste("page:",page_result))
 }
 
 
+# Interface shiny recherche 
+library(shiny)
+library(DT)
+
+# Lancement de l'application Shiny
+ui <- fluidPage(
+  titlePanel("Recherche de Films"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      numericInput("min_note", "Note minimale :", value = NA, min = 0, max = 10, step = 0.1),
+      numericInput("max_note", "Note maximale :", value = NA, min = 0, max = 10, step = 0.1),
+      textInput("date", "Date (année) :", ""),
+      textInput("gender", "Genre :", ""),
+      textInput("cast", "Casting :", ""),
+      textInput("director", "Réalisateur :", "")
+    ),
+    
+    mainPanel(
+      DTOutput("filtered_movies")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  # Convertir les notes en numérique si ce n'est pas déjà fait
+  movies$notes <- as.numeric(movies$notes)
+  
+  # Filtrage dynamique des données
+  filtered_movies <- reactive({
+    df <- movies
+    
+    # Filtrage par note minimale
+    if (!is.na(input$min_note)) {
+      df <- df[df$notes >= input$min_note, ]
+    }
+    
+    # Filtrage par note maximale
+    if (!is.na(input$max_note)) {
+      df <- df[df$notes <= input$max_note, ]
+    }
+    
+    # Filtrage par date
+    if (input$date != "") {
+      df <- df[grepl(input$date, df$date, ignore.case = TRUE), ]
+    }
+    
+    # Filtrage par genre
+    if (input$gender != "") {
+      df <- df[grepl(input$gender, df$gender, ignore.case = TRUE), ]
+    }
+    
+    # Filtrage par casting
+    if (input$cast != "") {
+      df <- df[grepl(input$cast, df$cast, ignore.case = TRUE), ]
+    }
+    
+    # Filtrage par réalisateur
+    if (input$director != "") {
+      df <- df[grepl(input$director, df$director, ignore.case = TRUE), ]
+    }
+    
+    return(df)
+  })
+  
+  # Afficher le tableau filtré
+  output$filtered_movies <- renderDT({
+    datatable(filtered_movies(), options = list(pageLength = 10))
+  })
+}
+
+shinyApp(ui, server)
+
 
 
 
