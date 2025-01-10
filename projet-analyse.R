@@ -17,6 +17,19 @@ library(stringr)
 #lien du site a scrapper
 #le genre du film n'apparait pas de base sur le site il faut cliquer d'abord sur le film chosit pour pouvoir le voir d'ou la création de movies_link et de get_gender
 #qui permettent de cliquer sur le film et puis de séléctionner le genre du film ; la dernière partie de movie_gender permet de créer une colonne avec le genre
+################################
+get_director = function(movies_link) {
+  movie_page = read_html(movies_link)
+  movie_director = movie_page %>% html_nodes(".meta-body-info+ .meta-body-oneline .dark-grey-link") %>%  
+    html_text() %>% paste (collapse = ",")
+  return(movie_director) }
+#############################"
+get_cast = function(movies_link) {
+  movie_page = read_html(movies_link)
+  movie_cast = movie_page %>% html_nodes(".meta-body-actor .dark-grey-link") %>%  
+    html_text() %>% paste (collapse = ",")
+  return(movie_cast) }
+##############################
 get_gender = function(movies_link) {
   movie_page = read_html(movies_link)
   movie_gender = movie_page %>% html_nodes(".meta-body-info .dark-grey-link") %>%  
@@ -52,9 +65,15 @@ date = page %>% html_nodes(".date") %>% html_text()%>% str_trim()
 
 gender = sapply (movies_link, FUN = get_gender, USE.NAMES = FALSE)
 
+#casting du film
+cast = sapply (movies_link, FUN = get_cast, USE.NAMES = FALSE)
+
+#récupération du réalisateur/des réalisateurs 
+
+director = sapply(movies_link, FUN = get_director, USE.NAMES = FALSE)
 #création d'un data frame contenant le nom, la note, la date et le ou les genres du film
 
-movies = rbind(movies,data.frame( name , notes , date , gender ))
+movies = rbind(movies,data.frame( name , notes , date , gender, cast , director))
 
 print(paste("page:",page_result))
 }
