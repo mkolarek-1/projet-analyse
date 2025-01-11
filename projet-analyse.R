@@ -6,7 +6,7 @@ library(rvest)
 library(dplyr)
 library(shiny)
 library(DT)
-
+library(stringr)
 
 
 
