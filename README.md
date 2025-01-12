@@ -1,3 +1,4 @@
+### code testé et validé pour les 46 premières pages
 ### Documentation détaillée du code
 
 #### Chargement des bibliothèques
@@ -83,7 +84,7 @@ name = page %>%
   str_trim()
 ```
 Sélectionne les titres des films, puis supprime les espaces inutiles.
-
+#### la fonction html_node est un peu différentes (dans les autres autres cas on trouve html_nodes) enlever le "S" permet de ne récupérer que le premier élément ici la première note (il en existe 3 maximum pour le site )
 - **Note du film :**
 ```r
 notes = page %>%
@@ -100,7 +101,8 @@ notes = page %>%
 Utilisent des techniques similaires avec les fonctions définies.
 
 ---
-
+### permet d'afficher un message a chaque page scraper
+print(paste("analyse de la page:",page_result))
 #### Interface utilisateur (UI)
 ```r
 ui <- fluidPage(
