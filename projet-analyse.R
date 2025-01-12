@@ -72,7 +72,7 @@ director = sapply(movies_link, FUN = get_director, USE.NAMES = FALSE)
 
 movies = rbind(movies,data.frame( name , notes , date , gender, cast , director))
 
-print(paste("page:",page_result))
+print(paste("analyse de la page:",page_result))
 }
 
 
