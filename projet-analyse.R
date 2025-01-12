@@ -57,7 +57,7 @@ notes = page %>%
 
 #récupération de la date du film
 
-date = page %>% html_nodes(".date") %>% html_text()%>% str_trim()
+date = page %>% html_nodes(".meta-body-info .date") %>% html_text()%>% str_trim()
 #récupération du genre du film
 
 gender = sapply (movies_link, FUN = get_gender, USE.NAMES = FALSE)
