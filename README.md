@@ -1,150 +1,135 @@
-### code testé et validé pour les 46 premières pages
-### Documentation détaillée du code
+### Documentation détaillée du code R pour le scraping et l'application Shiny
 
 #### Chargement des bibliothèques
-```r
-library(rvest)   # Permet d'extraire des données de pages web en HTML.
-library(dplyr)   # Facilite la manipulation et le filtrage des données.
-library(shiny)   # Crée une interface utilisateur interactive.
-library(DT)      # Gère les tableaux dynamiques pour Shiny.
-```
-- **`rvest`** : Utilisé pour extraire et manipuler des éléments HTML spécifiques des pages web. Par exemple, pour scrapper des données comme les notes ou le casting des films.
-- **`dplyr`** : Simplifie la manipulation des tableaux de données, notamment pour le filtrage et le tri.
-- **`shiny`** : Permet de concevoir une interface web interactive avec des panneaux et des entrées dynamiques.
-- **`DT`** : Utilisé pour afficher des tableaux interactifs dans une application Shiny.
 
----
+library(rvest)   # Utilisé pour extraire et manipuler des données à partir de pages HTML.
+library(dplyr)   # Permet de manipuler et transformer les données de manière efficace.
+library(shiny)   # Fournit un cadre pour créer des applications web interactives en R.
+library(DT)      # Utilisé pour afficher des tableaux interactifs et dynamiques dans les applications Shiny.
 
-#### Définition des fonctions pour scrapper des données
-#### On peut aussi constater que les fonctions get_*** sont en dehors de la boucle "for" pour éviter que toutes ces fonctions se remettent à jour à chaque lancement de la boucle
+#### Définition des fonctions pour scraper des données
 
-##### Fonction `get_director`
-```r
 get_director = function(movies_link) {
-  movie_page = read_html(movies_link) # Charge la page HTML du film.
+  # Charge la page HTML du film correspondant à l'URL fournie
+  movie_page = read_html(movies_link)
+  # Récupère le texte des éléments HTML contenant les informations du réalisateur
   movie_director = movie_page %>%
     html_nodes(".meta-body-info+ .meta-body-oneline .dark-grey-link") %>%
     html_text() %>%
     paste(collapse = ",")
+  # Retourne les réalisateurs sous forme de chaîne de texte
   return(movie_director)
 }
-```
-- **`movies_link`** : URL du film à analyser.
-- **`read_html`** : Charge la structure HTML de la page.
-- **`html_nodes`** : Sélectionne les balises HTML contenant les informations des réalisateurs.
-- **`html_text`** : Extrait le texte brut des balises sélectionnées.
-- **`paste(collapse = ",")`** : Combine plusieurs réalisateurs en une seule chaîne de texte, séparée par des virgules.
 
-##### Fonction `get_cast`
-```r
 get_cast = function(movies_link) {
+  # Charge la page HTML du film correspondant à l'URL fournie
   movie_page = read_html(movies_link)
+  # Récupère les noms des acteurs principaux dans les éléments HTML prédéfinis
   movie_cast = movie_page %>%
     html_nodes(".meta-body-actor .dark-grey-link") %>%
     html_text() %>%
     paste(collapse = ",")
+  # Retourne les noms des acteurs sous forme de chaîne de texte
   return(movie_cast)
 }
-```
-- Fonctionnement similaire à `get_director`, mais pour le casting des films.
 
-##### Fonction `get_gender`
-```r
 get_gender = function(movies_link) {
+  # Charge la page HTML du film correspondant à l'URL fournie
   movie_page = read_html(movies_link)
+  # Extrait les genres associés au film
   movie_gender = movie_page %>%
     html_nodes(".meta-body-info .dark-grey-link") %>%
     html_text() %>%
     paste(collapse = ",")
+  # Retourne les genres sous forme de chaîne de texte
   return(movie_gender)
 }
-```
-- **`get_gender`** collecte les genres associés à un film, en utilisant une logique semblable à celle des fonctions précédentes.
 
----
-#### les différents liens qui ressemble à ".meta-affintiy-score .meta-title-link" sont trouvé à l'aide d'une extension chrome du nom de selector gadget qui permet de trouver dans le code html les éléments utiles, mais parfois cette extension ne sélectionne pas le bon élément ( seulement un élément estéthique ) , il faut donc aller dans "inspecter" (avec clic droit) et fouiller soit même le code de la page pour trouver le bon élément
-#### Boucle pour extraire les données des pages Allociné
-```r
-for (page_result in seq(from=1, to=5, by=1)) {
-  link = paste("https://www.allocine.fr/films/?page=", page_result, sep="")
+#### Extraction des données Allociné
+
+# Les sélecteurs CSS tels que ".meta-affinity-score .meta-title-link" ont été identifiés 
+gratuitement à l'aide de l'extension Selector Gadget. Si l'extension ne fonctionne pas correctement,
+le code HTML doit être inspecté manuellement via les outils de développement des navigateurs.
+
+#Ici dans la boucle for on scrap 5 pages
+
+for (page_result in seq(from = 1, to = 5, by = 1)) {
+  # Construit l'URL pour chaque page à scraper
+  link = paste("https://www.allocine.fr/films/?page=", page_result, sep = "")
+  # Charge la page HTML de l'URL correspondante
   page = read_html(link)
-  ...
+Charge la structure HTML de la page.
+  # Extraction des noms de films
+  name = page %>%
+    html_nodes(".meta-affinity-score .meta-title-link") %>%
+    html_text() %>%
+    str_trim()
+la fonction html_node est un peu différentes (dans les autres autres cas on trouve html_nodes) enlever le "S" permet de ne récupérer que le premier élément ici la première note (il en existe 3 maximum pour le site ), la fonction html_node permet de scraper qu'une seule note sur les deux, ce qui était important pour garder une cohérence de taille dans le data.frame
+
+
+
+  # Extraction des notes des films
+  notes = page %>%
+    html_node(".stareval-note") %>%
+    html_text() %>%
+    str_trim() %>%
+    gsub(",", ".", .)
+
+  # Affiche un message pour suivre la progression du scraping
+  print(paste("Analyse de la page :", page_result))
 }
-```
-- **`seq(from=1, to=5, by=1)`** : Parcourt les pages 1 à 5 du site Allociné.
-- **`paste`** : Construit l’URL complète pour chaque page.
-- **`read_html(link)`** : Charge la structure HTML de la page.
 
-##### Extraction des informations
-- **Nom du film :**
-```r
-name = page %>%
-  html_nodes(".meta-affintiy-score .meta-title-link") %>%
-  html_text() %>%
-  str_trim()
-```
-Sélectionne les titres des films, puis supprime les espaces inutiles.
-#### la fonction html_node est un peu différentes (dans les autres autres cas on trouve html_nodes) enlever le "S" permet de ne récupérer que le premier élément ici la première note (il en existe 3 maximum pour le site )
-- **Note du film :**
-```r
-notes = page %>%
-  html_node(".stareval-note") %>%
-  html_text() %>%
-  str_trim() %>%
-  gsub(",", ".", .)
-```
-### la fonction html_node permet de scraper qu'une seule note sur les deux, ce qui était important pour garder une cohérence de taille dans le data.frame
-
-- **`gsub(",", ".", .)`** : Convertit les notes au format numérique en remplaçant les virgules par des points.
-
-- **Date et genre :**
-Utilisent des techniques similaires avec les fonctions définies.
-
----
-### permet d'afficher un message a chaque page scraper
-print(paste("analyse de la page:",page_result))
 #### Interface utilisateur (UI)
-```r
+
 ui <- fluidPage(
+  # Titre principal de l'application
   titlePanel("Recherche de Films"),
+  # Mise en page avec panneau latéral pour les filtres
   sidebarLayout(
     sidebarPanel(
+      # Champ pour définir la note minimale des films
       numericInput("min_note", "Note minimale :", value = NA, min = 0, max = 10, step = 0.1),
+      # Champ pour définir la note maximale des films
       numericInput("max_note", "Note maximale :", value = NA, min = 0, max = 10, step = 0.1),
+      # Champ pour entrer une année spécifique
       textInput("date", "Date (année) :", ""),
+      # Champ pour filtrer par genre
       textInput("gender", "Genre :", ""),
+      # Champ pour filtrer par acteur
       textInput("cast", "Casting :", ""),
+      # Champ pour filtrer par réalisateur
       textInput("director", "Réalisateur :", "")
     ),
+    # Panneau principal pour afficher les résultats
     mainPanel(
       DTOutput("filtered_movies")
     )
   )
 )
-```
-- **`numericInput`** : Crée une entrée pour des valeurs numériques (ex. : notes minimales et maximales).
-- **`textInput`** : Permet de saisir du texte pour des critères comme la date, le genre, ou le réalisateur.
-- **`DTOutput`** : Affiche le tableau dynamique filtré.
-
----
 
 #### Serveur (logique backend)
-```r
+
 server <- function(input, output, session) {
-  ...
+  # Crée un objet réactif qui filtre les films selon les entrées utilisateur
+  filtered_movies <- reactive({
+    movies_data %>%
+      filter(
+        is.na(input$min_note) | note >= input$min_note,
+        is.na(input$max_note) | note <= input$max_note,
+        grepl(input$date, year, ignore.case = TRUE),
+        grepl(input$gender, genre, ignore.case = TRUE),
+        grepl(input$cast, cast, ignore.case = TRUE),
+        grepl(input$director, director, ignore.case = TRUE)
+      )
+  })
+
+  # Affiche les films filtrés dans un tableau interactif
   output$filtered_movies <- renderDT({
     datatable(filtered_movies(), options = list(pageLength = 10))
   })
 }
-```
-- **`reactive`** : Filtre les données dynamiquement en fonction des entrées utilisateur.
-- **`datatable`** : Transforme les données filtrées en un tableau interactif.
-
----
 
 #### Lancement de l'application
-```r
-shinyApp(ui, server)
-```
-- Cette ligne exécute l'application avec l'interface utilisateur (`ui`) et le serveur (`server`).
 
+# Lance l'application Shiny avec l'interface utilisateur et la logique backend
+shinyApp(ui, server)
