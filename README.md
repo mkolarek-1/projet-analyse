@@ -60,7 +60,7 @@ get_gender = function(movies_link) {
 - **`get_gender`** collecte les genres associés à un film, en utilisant une logique semblable à celle des fonctions précédentes.
 
 ---
-#### Les différents liens qui ressemble à ".meta-affintiy-score .meta-title-link" sont trouvé à l'aide d'une extension chrome du nom de selector gadget qui permet de trouver dans le code html les éléments utiles, mais parfois cette extension ne sélectionne pas le bon élément ( seulement un élément estéthique ) , il faut donc aller dans "inspecter" (avec clic droit) et fouiller soit même le code de la page pour trouver le bon élément.
+#### Les différents liens qui ressemble à ".meta-affintiy-score .meta-title-link" sont trouvé à l'aide d'une extension chrome (selecteur css) du nom de selector gadget qui permet de trouver dans le code html les éléments utiles, mais parfois cette extension ne sélectionne pas le bon élément ( seulement un élément estéthique ) , il faut donc aller dans "inspecter" (avec clic droit) et fouiller soit même le code de la page pour trouver le bon élément.
 #### Boucle pour extraire les données des pages Allociné
 ```r
 for (page_result in seq(from=1, to=5, by=1)) {
